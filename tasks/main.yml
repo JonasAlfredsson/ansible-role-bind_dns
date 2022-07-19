@@ -1,0 +1,72 @@
+- name: "Create expected folders"
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: '0775'
+    owner: 'root'
+    group: '101'
+  loop:
+    - "{{ bind_container_base_dir }}"
+    - "{{ bind_container_base_dir }}/config"
+    - "{{ bind_container_base_dir }}/zones"
+    - "{{ bind_container_base_dir }}/logs"
+
+- name: Copy rndc keys
+  template:
+    src: "bind/rndc.key.j2"
+    dest: "{{ bind_container_base_dir }}/config/{{ name }}.key"
+    mode: '0440'
+    owner: 'root'
+    group: '101'
+  vars:
+    name: "{{ item.key }}"
+    control: "{{ item.value }}"
+  loop: "{{ bind_controls | dict2items }}"
+  notify:
+    - "Reload Bind"
+
+- name: Copy Bind configuration files
+  template:
+    src: "bind/{{ item }}"
+    dest: "{{ bind_container_base_dir }}/config/{{ item | regex_replace('.j2', '') }}"
+    mode: '0664'
+    owner: 'root'
+    group: '101'
+  loop:
+    - "named.conf.local.j2"
+    - "named.conf.options.j2"
+    - "named.conf.logging.j2"
+  notify:
+    - "Reload Bind"
+
+- name: Update primary zones
+  include_tasks: update_zone.yml
+  vars:
+    domain: "{{ outer_item.key }}"
+    zone: "{{ outer_item.value }}"
+  loop: "{{ bind_zones | dict2items }}"
+  loop_control:
+    loop_var: "outer_item"
+  when: zone.type in [ "master", "primary" ]
+
+- name: Start Bind container
+  docker_container:
+    name: "{{ bind_container_name }}"
+    image: "{{ bind_container_image }}"
+    pull: yes
+    state: started
+    restart_policy: unless-stopped
+    container_default_behavior: compatibility
+    command: "{{ bind_container_command }}"
+    published_ports: "{{ bind_container_ports }}"
+    volumes:
+      - "{{ bind_container_base_dir }}/config:/etc/bind/local-config:ro"
+      - "{{ bind_container_base_dir }}/zones:/var/cache/bind"
+      - "{{ bind_container_base_dir }}/logs:/var/log/bind"
+      - "{{ bind_container_base_dir }}/entrypoint.d:/entrypoint.d"
+    networks_cli_compatible: yes
+    network_mode: default
+    networks: "{{ bind_container_networks }}"
+    purge_networks: true
+    env:
+      BIND_LOG: "{{ bind_log_force_stderr | ternary('-g', '-f') }}"

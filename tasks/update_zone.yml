@@ -1,0 +1,46 @@
+- name: "Create folder for {{ domain }}"
+  file:
+    state: directory
+    path: "{{ bind_container_base_dir }}/zones/{{ domain }}"
+    mode: '0775'
+    owner: 'root'
+    group: '101'
+
+- name: "Update records for {{ domain }}"
+  template:
+    src: "zones/{{ item }}"
+    dest: "{{ bind_container_base_dir }}/zones/{{ domain }}/{{ item | regex_replace('.j2', '') }}"
+    mode: '0664'
+    owner: 'root'
+    group: '101'
+  register: zone_records
+  loop:
+    - hosts.conf.j2
+    - other.conf.j2
+  notify:
+    - "Reload Bind"
+
+- name: "Check SOA change for {{ domain }}"
+  no_log: false
+  template:
+    src: zones/soa.conf.j2
+    dest: "{{ bind_container_base_dir }}/zones/{{ domain }}/soa.tmp"
+    mode: '0664'
+    owner: 'root'
+    group: '101'
+  vars:
+    serial: "0000000000"
+  register: zone_soa
+
+- name: "Update SOA record for {{ domain }}"
+  template:
+    src: zones/soa.conf.j2
+    dest: "{{ bind_container_base_dir }}/zones/{{ domain }}/soa.conf"
+    mode: '0664'
+    owner: 'root'
+    group: '101'
+  vars:
+    serial: "{{ lookup('pipe', 'date +\"%s\"') }}"
+  when: zone_records.changed or zone_soa.changed
+  notify:
+    - "Reload Bind"

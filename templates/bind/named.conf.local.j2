@@ -1,0 +1,57 @@
+{% if bind_controls is defined and bind_controls|length > 0 %}
+{% for name, control in bind_controls.items() %}
+include "/etc/bind/local-config/{{ name }}.key";
+{% endfor %}
+controls {
+{% for name, control in bind_controls.items() %}
+    inet {{ control.inet | default('*') }} port {{ control.port | default('953') }} allow { "{{ control.allow | default([ "localhost" ]) | join('"; "') }}"; } keys { "{{ name }}-key"; };
+{% endfor %}
+};
+{% endif %}
+{% if bind_include_default_zones %}
+
+include "/etc/bind/named.conf.default-zones";
+{% endif %}
+{% if bind_include_rfc1918 %}
+
+include "/etc/bind/zones.rfc1918";
+{% endif %}
+
+{% for name, zone in bind_zones.items() %}
+zone "{{ name }}" {
+    type {{ zone.type }};
+{% if zone.type in [ 'master', 'primary' ] %}
+    file "/var/cache/bind/{{ name }}/soa.conf";
+{% elif zone.type in [ 'slave', 'secondary', 'mirror', 'stub' ] %}
+    file "/var/cache/bind/db.{{ name }}.{{ zone.type }}";
+{% endif %}
+{% if zone.type in [ 'slave', 'secondary', 'mirror', 'stub', 'redirect' ] %}
+    primaries {
+{% for primary in zone.primaries %}
+        {{ primary }};
+{% endfor %}
+    };
+{% endif %}
+{% if zone.allow_transfer is defined and zone.allow_transfer|length > 0 %}
+
+    allow-transfer {
+{% for dest in zone.allow_transfer %}
+        {{ dest }};
+{% endfor %}
+    };
+{% endif %}
+{% if zone.also_notify is defined and zone.also_notify|length > 0 %}
+
+    also-notify {
+{% for dest in zone.also_notify %}
+        {{ dest }};
+{% endfor %}
+    };
+{% endif %}
+{% if zone.raw_options is defined %}
+
+    {{ zone.raw_options | indent(width=4) }}
+{%- endif %}
+};
+
+{% endfor %}

@@ -1,0 +1,59 @@
+#
+# Container options
+#
+
+bind_container_base_dir: "/srv/bind"
+
+bind_container_name: "bind"
+bind_container_image: "jonasal/bind:9"
+bind_container_command: "-4"  # Docker usually don't have IPv6 enabled.
+
+bind_container_networks:
+  - name: bridge
+bind_container_ports:
+  - "53:53"
+  - "53:53/udp"
+  - "953:953"
+
+
+#
+# named.conf.logging
+#
+
+bind_log_force_stderr: false
+
+bind_log_channels: {}
+bind_log_channel_console_severity: "info"
+
+bind_log_categories: {}
+bind_log_category_default: [ "console" ]
+
+
+#
+# named.conf.options
+#
+
+bind_listen_on: [ "any" ]
+bind_listen_on_v6: [ "none" ]  # Docker usually don't have IPv6 enabled.
+bind_allow_query: [ "any" ]
+
+bind_allow_transfer: [ "none" ]
+bind_also_notify: []
+
+bind_forwarders:
+  - '1.1.1.1'
+  - '208.67.222.222'
+
+bind_dnssec_validation: yes
+
+
+#
+# named.conf.local
+#
+
+bind_controls: {}
+
+bind_include_default_zones: true
+bind_include_rfc1918: true
+
+bind_zones: {}

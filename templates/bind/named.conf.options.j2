@@ -1,0 +1,47 @@
+options {
+    // This is the working directory of the server. Any non-absolute pathnames
+    // in the configuration files are taken as relative to this directory.
+    directory "/var/cache/bind";
+
+    // Remove (hide) our bind version - no reason to disclose it.
+    version "";
+
+    // Configure the IPs to listen on here.
+    listen-on    { {{ bind_listen_on | join('; ') }}; };
+    listen-on-v6 { {{ bind_listen_on_v6 | join('; ') }}; };
+
+    // If you want to allow only specific hosts to use the DNS server, or allow
+    // anyone to send queries.
+    allow-query { {{ bind_allow_query | join('; ') }}; };
+
+    // These options should probably have their "safe" default values which
+    // may then be overridden on a per zone basis instead of here.
+    allow-transfer {
+{% for dest in bind_allow_transfer %}
+        {{ dest }};
+{% endfor %}
+    };
+    notify explicit;
+{% if bind_also_notify|length > 0 %}
+    also-notify {
+{% for target in bind_also_notify %}
+        {{ target }};
+{% endfor %}
+    };
+{% endif %}
+
+    // IP addresses to upstream DNS servers we will query for any domains we
+    // are not authoritative for.
+    forwarders {
+{% for ip in bind_forwarders %}
+        {{ ip }};
+{% endfor %}
+    };
+
+    // Use the downloaded bind.keys file when validating signed zones.
+    dnssec-validation {{ bind_dnssec_validation | ternary('yes', 'no') }};
+{% if bind_options_raw is defined %}
+
+    {{ bind_options_raw | indent(width=4) }}
+{%- endif %}
+};

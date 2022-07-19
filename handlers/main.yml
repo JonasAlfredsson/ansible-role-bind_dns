@@ -1,0 +1,2 @@
+- name: "Reload Bind"
+  command: "docker kill --signal=HUP {{ bind_container_name }}"

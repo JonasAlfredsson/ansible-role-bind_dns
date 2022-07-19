@@ -1,0 +1,43 @@
+logging {
+    // Output to stderr (i.e. the console).
+    channel "console" {
+        stderr;
+
+        severity {{ bind_log_channel_console_severity }} ;
+
+        print-time yes;
+        print-severity yes;
+        print-category yes;
+    };
+
+{% for name, settings in bind_log_channels.items() %}
+    channel "{{ name }}" {
+        file "/var/log/bind/{{ name }}.log"{% if settings.versions is defined %} versions {{ settings.versions }} size {{ settings.size | default('10m') }}{% endif %};
+
+        severity {{ settings.severity }};
+
+        print-time {{ settings.print_time | default(true) | ternary('yes', 'no') }};
+        print-severity {{ settings.print_severity | default(true) | ternary('yes', 'no') }};
+        print-category {{ settings.print_category | default(true) | ternary('yes', 'no') }};
+    };
+
+{% endfor %}
+{% for category, channels in bind_log_categories.items() %}
+{% if category in [ "client", "config", "database", "delegation-only", "dispatch", "dnssec", "general", "lame-servers", "network", "notify", "queries", "resolver", "rpz", "rate-limit", "security", "unmatched", "update", "update-security", "xfer-in", "xfer-out" ] %}
+    category "{{ category }}" {
+{% for channel in channels %}
+        "{{ channel }}";
+{% endfor %}
+    };
+
+{% endif %}
+{% endfor %}
+    // All categories which are not explicitly defined (or disabled by default)
+    // will be caught by the "default" category, and then sent to all the
+    // channels listed here.
+    category "default" {
+{% for channel in bind_log_category_default %}
+        "{{ channel }}";
+{% endfor %}
+    };
+};

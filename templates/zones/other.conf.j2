@@ -1,0 +1,8 @@
+{% if zone.custom_records is defined %}
+{% for record_type, records in zone.custom_records.items() %}
+{% for record in records %}
+{{ "{:<25}  IN  {:<6}  {}".format(record.name, record_type, record.data) }}
+{% endfor %}
+
+{%- endfor %}
+{% endif %}

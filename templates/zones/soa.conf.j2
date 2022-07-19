@@ -1,0 +1,15 @@
+$TTL {{ zone.ttl | default('1h') }}
+$ORIGIN {{ domain }}.
+@                   IN    SOA     {{ zone.nameservers[0] }}. {{ zone.rname | default('admin.' + domain) }}. (
+                          {{ serial }}	; serial
+                          {{ zone.refresh | default('3h') }}		; refresh
+                          {{ zone.retry | default('1h') }}		; retry
+                          {{ zone.expire | default('1w') }}		; expire
+                          {{ zone.neg_cache | default('1h') }}		; negative caching TTL
+                          )
+{% for nameserver in zone.nameservers %}
+@                   IN    NS      {{ nameserver }}.
+{% endfor %}
+
+$INCLUDE {{ domain }}/hosts.conf
+$INCLUDE {{ domain }}/other.conf
