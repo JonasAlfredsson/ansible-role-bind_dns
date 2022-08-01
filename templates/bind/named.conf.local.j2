@@ -7,6 +7,8 @@ controls {
     inet {{ control.inet | default('*') }} port {{ control.port | default('953') }} allow { "{{ control.allow | default([ "localhost" ]) | join('"; "') }}"; } keys { "{{ name }}-key"; };
 {% endfor %}
 };
+{% else %}
+controls {};
 {% endif %}
 {% if bind_include_default_zones %}
 
