@@ -3,6 +3,8 @@
 This Ansible role will deploy a Docker container running the ISC Bind DNS
 service and configure it to your liking.
 
+> The container used is [`jonasal/bind`][9] from [here][10].
+
 
 
 # Installation
@@ -51,15 +53,27 @@ four different categories.
 
 ### Container Options
 The settings grouped in the Container options section have more of an impact on
-the host and the actual Docker container than the Bind program. However, the
-only one that probably should be changed is the base directory in which the
-container will find the configuration files and write its logs.
+the host and the actual Docker container than the Bind program. One setting
+that probably should be changed is the base directory in which the container
+will find the configuration files and write its logs:
 
 ```yaml
 bind_container_base_dir: "/srv/bind"
 ```
 
-Other than that the defaults should be sane.
+Then there is the following setting:
+
+```yaml
+bind_use_host_network: false
+```
+
+which, when set to `true`, make the container use the `host` network (and thus
+ignore anything listed in `bind_container_networks` and `bind_container_ports`).
+This will most likely be necessary in case you want to enable IPv6 support,
+but please read [this section][8] before you do.
+
+> Don't forget to update `bind_container_command` and `bind_listen_on_v6` if you
+> do enable IPv6.
 
 ### Bind Logging
 Logging is important, and Bind is not very good at it. By default the container
@@ -76,15 +90,15 @@ When you know everything works you may turn this off again and load the proper
 configuration from the
 [`named.cong.logging`](./templates/bind/named.conf.logging.j2) file. [This][2]
 resource is pretty good at explaining how the logging works, but important to
-know here is that there is a "console" channel defined which output to stderr.
-The severity of that one is controlled with
+know here is that I have defined a default "console" channel which always try
+to output to stderr. The severity of that one is controlled with
 
 ```yaml
 bind_log_channel_console_severity: "info"
 ```
 
-and the "default" category will have this "console" channel included unless you
-change it.
+and the obligatory "default" category will have this "console" channel included
+unless you manually change it to something else.
 
 ```yaml
 bind_log_category_default: [ "console" ]
@@ -116,7 +130,7 @@ Looking in the [defaults](./defaults/main.yml) file, and then in the
 be quite easy to see what is going on here.
 
 Unless you try to do something very advanced you can actually get away with
-the options block being pretty sparse. But, as was mentioned at the beginning,
+the `options` block being pretty sparse. But, as was mentioned at the beginning,
 there exists [a ton of options][3] here and there is no way to prepare for all
 of them. As a workaround for this it is possible to add some "raw" text into
 the options file like this.
@@ -147,14 +161,14 @@ bind_controls:
     allow: [ 'localhost' ]
     secret: "abcdef"
   "name_of_key_2":
-    secred: "ghijkl"
+    secret: "ghijkl"
 ```
 
-The name needs to be unique, which is why it is used as the key in the dict
+The name needs to be unique, which is why it is used as the key in the map
 above. The only thing that is required is the `secrets` value, and that may
 be created by following [these steps][5].
 
-#### bind_include_default_zones and bind_include_rfc1918
+#### `bind_include_default_zones` and `bind_include_rfc1918`
 Of the following two settings you should set the `rfc1918` one to `false` if
 you want your Bind instance to be able to [respond][6] with IP addresses that
 are in [private ranges][7].
@@ -191,7 +205,7 @@ bind_zones:
         hostname: "www"
     custom_records:
       "MX":
-        - name: "1w"
+        - name: ""
           data: "10 mail.example.com."
       "SRV":
         - name: "_http._tcp.example.com."
@@ -206,7 +220,10 @@ bind_zones:
 ```
 
 So while I can try to explain all of these settings I think it is easier to just
-add the files outputted here instead.
+add the files outputted here instead so you can see how each value will be
+printed.
+
+> Also, read the section about [`rname`][11] to understand its formatting.
 
 ##### named.conf.local
 ```
@@ -260,3 +277,7 @@ _http._tcp.example.com.    IN  SRV     0    5      80   www.example.com.
 [5]: https://github.com/JonasAlfredsson/docker-bind#create-rndckey
 [6]: https://serverfault.com/a/306109
 [7]: https://en.wikipedia.org/wiki/Private_network
+[8]: https://github.com/JonasAlfredsson/docker-bind#docker-network-mode
+[9]: https://hub.docker.com/r/jonasal/bind/tags
+[10]: https://github.com/JonasAlfredsson/docker-bind
+[11]: https://en.wikipedia.org/wiki/SOA_record
