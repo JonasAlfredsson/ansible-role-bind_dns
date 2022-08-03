@@ -8,6 +8,7 @@ bind_container_name: "bind"
 bind_container_image: "jonasal/bind:9"
 bind_container_command: "-4"  # Docker usually don't have IPv6 enabled.
 
+bind_use_host_network: false
 bind_container_networks:
   - name: bridge
 bind_container_ports:

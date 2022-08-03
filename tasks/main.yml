@@ -58,15 +58,15 @@
     restart_policy: unless-stopped
     container_default_behavior: compatibility
     command: "{{ bind_container_command }}"
-    published_ports: "{{ bind_container_ports }}"
     volumes:
       - "{{ bind_container_base_dir }}/config:/etc/bind/local-config:ro"
       - "{{ bind_container_base_dir }}/zones:/var/cache/bind"
       - "{{ bind_container_base_dir }}/logs:/var/log/bind"
       - "{{ bind_container_base_dir }}/entrypoint.d:/entrypoint.d"
     networks_cli_compatible: yes
-    network_mode: default
-    networks: "{{ bind_container_networks }}"
+    network_mode: "{{ bind_use_host_network | bool | ternary('host', 'default') }}"
+    networks: "{{ bind_use_host_network | bool | ternary(omit, bind_container_networks) }}"
+    published_ports: "{{ bind_use_host_network | bool | ternary(omit, bind_container_ports) }}"
     purge_networks: true
     env:
       BIND_LOG: "{{ bind_log_force_stderr | ternary('-g', '-f') }}"
