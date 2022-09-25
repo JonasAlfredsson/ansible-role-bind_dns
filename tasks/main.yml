@@ -70,3 +70,7 @@
     purge_networks: true
     env:
       BIND_LOG: "{{ bind_log_force_stderr | ternary('-g', '-f') }}"
+
+- name: Override nameservers set by Openresolv
+  import_tasks: override_openresolv.yml
+  when: bind_override_openresolv

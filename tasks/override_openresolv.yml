@@ -1,0 +1,14 @@
+---
+# One issue with openresolv is that if 127.0.0.1 is present in the the list of
+# nameservers, then that is the only IP which will be written to the resolv.conf
+# file.
+- name: Override nameservers
+  lineinfile:
+    path: /etc/resolvconf.conf
+    regexp: '^#?name_servers='
+    line: name_servers="{{ bind_resolvconf_nameservers|join(' ') }}"
+  register: openresolv_config
+
+- name: Regenerate resolv.conf
+  command: resolvconf -u
+  when: openresolv_config.changed
