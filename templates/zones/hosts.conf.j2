@@ -1,9 +1,9 @@
 {% if zone.hosts is defined %}
 {% for ip, host in zone.hosts.items() %}
-{{ "{:<25}  IN  A      {}".format(host.hostname, ip) }}
+{{ "{:<25}  IN  A      {}".format(host.name, ip) }}
 {% if host.cnames is defined %}
 {% for cname in host.cnames %}
-{{ "{:<25}  IN  CNAME  {}".format(cname, host.hostname) }}
+{{ "{:<25}  IN  CNAME  {}".format(cname, host.name) }}
 {% endfor %}
 {% endif %}
 {% endfor %}

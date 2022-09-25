@@ -199,10 +199,10 @@ bind_zones:
     rname: "admin.example.com"
     hosts:
       "192.168.0.4":
-        hostname: "ns0"
+        name: "ns0"
         cnames: [ "main-computer", "main" ]
       "192.168.0.5":
-        hostname: "www"
+        name: "www"
     custom_records:
       "MX":
         - name: ""
@@ -266,7 +266,7 @@ main-computer              IN  CNAME  ns0
 main                       IN  CNAME  ns0
 www                        IN  A      192.168.0.5
 
-1w                         IN  MX      10 mail.example.com
+                           IN  MX      10 mail.example.com
 _http._tcp.example.com.    IN  SRV     0    5      80   www.example.com.
 ```
 
