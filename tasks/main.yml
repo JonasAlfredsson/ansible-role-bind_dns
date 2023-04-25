@@ -63,8 +63,9 @@
       - "{{ bind_container_base_dir }}/zones:/var/cache/bind"
       - "{{ bind_container_base_dir }}/logs:/var/log/bind"
       - "{{ bind_container_base_dir }}/entrypoint.d:/entrypoint.d"
-    networks_cli_compatible: yes
-    network_mode: "{{ bind_use_host_network | bool | ternary('host', 'default') }}"
+    comparisons:
+      networks: strict
+    network_mode: "{{ bind_use_host_network | bool | ternary('host', omit) }}"
     networks: "{{ bind_use_host_network | bool | ternary(omit, bind_container_networks) }}"
     published_ports: "{{ bind_use_host_network | bool | ternary(omit, bind_container_ports) }}"
     purge_networks: true
