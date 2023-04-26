@@ -1,3 +1,14 @@
+- name: Create 'resolved.conf.d' directory
+  file:
+    path: '/etc/systemd/resolved.conf.d'
+    state: directory
+    mode: "0755"
+  when: bind_disable_dnsstublistener or bind_override_systemd_resolved
+
+- name: Disable the systemd-resolved controlled DNSStubListener
+  include_tasks: disable_dnsstublistener.yml
+  when: bind_disable_dnsstublistener
+
 - name: "Create expected folders"
   file:
     state: directory
@@ -73,3 +84,7 @@
 - name: Override nameservers set by Openresolv
   import_tasks: override_openresolv.yml
   when: bind_override_openresolv
+
+- name: Override nameservers set by systemd-resolved
+  import_tasks: override_systemd_resolved.yml
+  when: bind_override_systemd_resolved

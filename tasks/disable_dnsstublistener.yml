@@ -1,0 +1,25 @@
+---
+# The stublistener service use port 53 which we need for BIND, so it needs to
+# be disabled.
+- name: Disable the systemd-resolved DNS stublistener
+  copy:
+    src: 'files/resolved.conf.d/disable_dnsstub.conf'
+    dest: '/etc/systemd/resolved.conf.d/disable_dnsstub.conf'
+    mode: "0644"
+  notify: Reload systemd resolved
+
+# Point to correct resolved config file when DNSStubListener is disabled.
+# GitHub issue: https://github.com/systemd/systemd/issues/9450
+- name: Create symlink correct resolv.conf file
+  file:
+    src: '/run/systemd/resolve/resolv.conf'
+    dest: '/etc/resolv.conf'
+    mode: "0644"
+    state: link
+    force: true
+  notify: Reload systemd resolved
+
+# If any changes are made to the configuration above we need to run the handlers
+# immediately.
+- name: Run any outstanding handlers
+  meta: flush_handlers

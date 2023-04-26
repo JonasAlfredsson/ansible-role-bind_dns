@@ -1,0 +1,4 @@
+# Use our desired nameservers first before falling back to what was provided
+# by the DHCP.
+[Resolve]
+DNS={{ bind_resolvconf_nameservers|join(' ') }}

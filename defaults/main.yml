@@ -66,4 +66,7 @@ bind_zones: {}
 
 bind_resolvconf_nameservers: "{{ [ '127.0.0.1' ] + bind_forwarders }}"
 
-bind_override_openresolv: false
+bind_disable_dnsstublistener: false  # Enable if port 53 is already in use.
+
+bind_override_systemd_resolved: false  # Debian/Ubuntu
+bind_override_openresolv: false        # Raspberry Pi
