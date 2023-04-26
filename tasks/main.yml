@@ -56,7 +56,6 @@
     pull: yes
     state: started
     restart_policy: unless-stopped
-    container_default_behavior: compatibility
     command: "{{ bind_container_command }}"
     volumes:
       - "{{ bind_container_base_dir }}/config:/etc/bind/local-config:ro"
@@ -68,7 +67,6 @@
     network_mode: "{{ bind_use_host_network | bool | ternary('host', omit) }}"
     networks: "{{ bind_use_host_network | bool | ternary(omit, bind_container_networks) }}"
     published_ports: "{{ bind_use_host_network | bool | ternary(omit, bind_container_ports) }}"
-    purge_networks: true
     env:
       BIND_LOG: "{{ bind_log_force_stderr | ternary('-g', '-f') }}"
 
