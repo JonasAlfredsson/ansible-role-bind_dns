@@ -53,7 +53,7 @@ zone "{{ name }}" {
 {% if zone.raw_options is defined %}
 
     {{ zone.raw_options | indent(width=4) }}
-{%- endif %}
+{% endif %}
 };
 
 {% endfor %}
