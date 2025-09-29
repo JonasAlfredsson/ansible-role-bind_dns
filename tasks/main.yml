@@ -25,12 +25,12 @@
 - name: Copy rndc keys
   template:
     src: "bind/rndc.key.j2"
-    dest: "{{ bind_container_base_dir }}/config/{{ name }}.key"
+    dest: "{{ bind_container_base_dir }}/config/{{ filename }}.key"
     mode: '0440'
     owner: 'root'
     group: '101'
   vars:
-    name: "{{ item.key }}"
+    filename: "{{ item.key }}"
     control: "{{ item.value }}"
   loop: "{{ bind_controls | dict2items }}"
   notify:
